@@ -3,8 +3,14 @@ package main
 import (
 	"log"
 	"net/http"
+	"reflect"
+	"runtime"
 	"time"
 )
+
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
 
 func Logger(inner http.Handler, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

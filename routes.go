@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/dannyrfar/go-api/handlers"
 )
 
 type Route struct {
@@ -15,15 +17,33 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		"Index",
+		"Home",
 		"GET",
 		"/",
-		Index,
+		handlers.Index,
 	},
 	Route{
-		"IndexSub",
+		"List Reminders",
 		"GET",
-		"/test",
-		Index,
+		"/reminders",
+		handlers.GetReminderListHandler,
+	},
+	Route{
+		"Add Reminder",
+		"POST",
+		"/reminders",
+		handlers.AddReminderHandler,
+	},
+	Route{
+		"Index",
+		"DELETE",
+		"/reminders/{id}",
+		handlers.DeleteReminderHandler,
+	},
+	Route{
+		"Index",
+		"PUT",
+		"/reminders",
+		handlers.Index,
 	},
 }

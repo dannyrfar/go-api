@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/dannyrfar/go-api/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -16,6 +17,6 @@ func NewRouter() *chi.Mux {
 		handler = route.HandlerFunc
 		r.Method(route.Method, route.Pattern, handler)
 	}
-	r.NotFound(Handle404)
+	r.NotFound(handlers.Handle404)
 	return r
 }

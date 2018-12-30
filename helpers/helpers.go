@@ -1,15 +1,59 @@
-package main
+package helpers
 
 import (
 	"fmt"
 	"net/http"
+	"path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/sirupsen/logrus"
 )
+
+// Route type definition
+type Route struct {
+	Name        string
+	Method      string
+	Pattern     string
+	HandlerFunc http.HandlerFunc
+}
+
+// Routes list of Route
+type Routes []Route
+
+// NewRouter returns a new router
+func NewRouter(routes Routes) *chi.Mux {
+
+	logger := logrus.New()
+	logger.Formatter = &logrus.JSONFormatter{
+		DisableTimestamp: true,
+	}
+	r := chi.NewRouter()
+	r.Use(NewStructuredLogger(logger))
+	r.Use(middleware.Recoverer)
+	for _, route := range routes {
+		var handler http.Handler
+		handler = route.HandlerFunc
+		r.Method(route.Method, route.Pattern, handler)
+	}
+	r.NotFound(Handle404)
+	r.MethodNotAllowed(Handle404)
+	return r
+}
+
+func Handle404(w http.ResponseWriter, r *http.Request) {
+	dir, file := path.Split(r.RequestURI)
+	ext := filepath.Ext(file)
+	if file == "" || ext == "" {
+		http.ServeFile(w, r, "./ui/dist/ui/index.html")
+	} else {
+		http.ServeFile(w, r, "./ui/dist/ui/"+path.Join(dir, file))
+	}
+}
 
 func GetFunctionName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()

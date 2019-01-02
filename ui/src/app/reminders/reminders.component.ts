@@ -26,6 +26,9 @@ export class RemindersComponent implements OnInit {
   }
 
   addReminder(reminderMessage: string) {
+    if (reminderMessage === undefined) {
+      this.getAll();
+    } else {
     const newReminder: Reminder = {
       message: reminderMessage,
       id: '',
@@ -34,8 +37,8 @@ export class RemindersComponent implements OnInit {
 
     this.reminderService.addReminder(newReminder).subscribe(() => {
       this.getAll();
-
     });
+  }
   }
 
   completeReminder(reminder: Reminder) {

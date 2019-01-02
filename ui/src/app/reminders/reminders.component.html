@@ -2,14 +2,12 @@
 <table class="table">
   <thead>
   <tr>
-    <th>ID</th>
     <th>Message</th>
     <th>Complete</th>
   </tr>
   </thead>
   <tbody>
   <tr *ngFor="let reminder of activeReminders">
-    <td>{{reminder.id}}</td>
     <td>{{reminder.message}}</td>
     <td>
       <button *ngIf="!reminder.complete" class="btn btn-secondary" (click)="completeReminder(reminder)">
@@ -30,14 +28,12 @@
 <table class="table">
   <thead>
   <tr>
-    <th>ID</th>
     <th>Message</th>
     <th>Complete</th>
   </tr>
   </thead>
   <tbody>
   <tr *ngFor="let reminder of completedReminders">
-    <td>{{reminder.id}}</td>
     <td>{{reminder.message}}</td>
     <td>
       <button *ngIf="!reminder.complete" class="btn btn-secondary" (click)="completeReminder(reminder)">
@@ -53,5 +49,5 @@
   </tr>
   </tbody>
 </table>
-<input placeholder="description..." [(ngModel)]="ReminderMessage">
+<input placeholder="description..." [(ngModel)]="ReminderMessage" (keydown.enter)="addReminder(ReminderMessage)">
 <button class="btn btn-primary" (click)="addReminder(ReminderMessage)">Add</button>

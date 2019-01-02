@@ -1,0 +1,28 @@
+{
+  "name": "go-api",
+  "version": "1.0.0",
+  "description": "npm package",
+  "main": "serve.sh",
+  "scripts": {
+    "server": "cd server && gin --port 4201 --path . --build . --i --all",
+    "client": "cd ui && ng serve",
+    "start": "concurrently \"npm run server\" \"npm run client\" ",
+    "getgodeps": "go get ./...",
+    "getnodedeps": "cd ui && npm install",
+    "getdeps": "concurrently \"npm run getgodeps\" \"npm run getnodedeps\" ", 
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/dannyrfar/go-api.git"
+  },
+  "devDependencies": {
+    "concurrently": "^1.0.0"
+  },
+  "author": "Danny Farah",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/dannyrfar/go-api/issues"
+  },
+  "homepage": "https://gitlab.com/dannyrfar/go-api#README"
+}

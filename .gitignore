@@ -1,7 +1,9 @@
-*/gin-bin/*
+server/gin-bin
 gin-bin
 node_modules
-*/node_modules/*
-*/package-lock.json
+ui/node_modules
+ui/package-lock.json
+package-lock.json
 dist
+ui/dist
 go-server

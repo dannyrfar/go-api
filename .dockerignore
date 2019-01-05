@@ -1,7 +1,6 @@
 node_modules
 ui/node_modules
 README.md
-nginx.conf
 Dockerfile
 .gitignore
 dist

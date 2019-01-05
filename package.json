@@ -4,7 +4,9 @@
   "description": "npm package",
   "main": "serve.sh",
   "scripts": {
-    "compile": "cd ui && ng build --output-path ../dist && cd ../server && go build -o ../go-server",
+    "go-compile":"cd ../server && go get && go build -o ../go-server",
+    "node_compile":"cd ui && ng build --output-path ../dist",
+    "compile": "",
     "server": "cd server && gin --port 4201 --path . --build . --i --all",
     "client": "cd ui && ng serve",
     "start": "concurrently \"npm run server\" \"npm run client\" ",

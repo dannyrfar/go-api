@@ -1,14 +1,16 @@
 FROM dannyrfar/go-node-alpine:latest as builder
 WORKDIR /usr/src/app
-COPY ui ./ui
+COPY ui /usr/src/app/ui
 RUN cd ui && npm install && cd ../
-RUN cd ui && ng build --output-path ../dist && cd ..
+RUN cd ui && ng build --output-path /usr/src/app/dist
 
-WORKDIR /go/github.com/dannyrfar/go-api
-COPY server ./server
-RUN cd server && go get && go build -o ../go-server
+RUN mkdir /go/src/github.com && mkdir /go/src/github.com/dannyrfar && mkdir /go/src/github.com/dannyrfar/go-api && cd /go/src/github.com/dannyrfar/go-api
+COPY server /go/src/github.com/dannyrfar/go-api/server
+RUN cd /go/src/github.com/dannyrfar/go-api/server && go get && go build -o /go/src/github.com/dannyrfar/go-api/go-server
 
-FROM nginx:1.13.12-alpine
-COPY --from=builder /usr/src/app/dist/ui /usr/share/nginx/html
-COPY --from=builder /go/github.com/dannyrfar/go-api/go-server /go-server
-CMD ["./go-server"]
+FROM nginx:1.15.8-alpine
+COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+RUN cd /
+COPY --from=builder /go/src/github.com/dannyrfar/go-api/go-server /go-server
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+ENTRYPOINT ["./go-server"]

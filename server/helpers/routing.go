@@ -39,8 +39,9 @@ func AttachMiddleware(r *chi.Mux) {
 		DisableTimestamp: true,
 	}
 	r.Use(NewStructuredLogger(logger))
+	//r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	//r.NotFound(handle404)
+	r.NotFound(handle404)
 	//r.Use(AuthRequired)
 	r.Use(CORSMiddleware)
 }

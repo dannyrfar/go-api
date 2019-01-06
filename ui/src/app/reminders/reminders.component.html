@@ -1,4 +1,6 @@
 <h2>Reminders</h2>
+<input placeholder="Enter a reminder" (keyup.enter)="addReminder($event)" [(ngModel)]="reminderMessage">
+
 <table class="table">
   <thead>
   <tr>
@@ -49,5 +51,3 @@
   </tr>
   </tbody>
 </table>
-<input placeholder="description..." [(ngModel)]="ReminderMessage" (keydown.enter)="addReminder(ReminderMessage)">
-<button class="btn btn-primary" (click)="addReminder(ReminderMessage)">Add</button>

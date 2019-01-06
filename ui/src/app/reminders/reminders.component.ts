@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RemindersService, Reminder } from '../reminders.service';
+import { delay } from 'q';
 
 @Component({
   selector: 'app-reminders',
@@ -24,18 +25,16 @@ export class RemindersComponent implements OnInit {
       this.completedReminders = data.filter((a) => a.complete);
     });
   }
-
-  addReminder(reminderMessage: string) {
-    if (reminderMessage === undefined) {
-      this.getAll();
+  addReminder(event) {
+    if (event.target.value === '') {
     } else {
     const newReminder: Reminder = {
-      message: reminderMessage,
+      message: event.target.value,
       id: '',
       complete: false
     };
-
     this.reminderService.addReminder(newReminder).subscribe(() => {
+      this.reminderMessage = '';
       this.getAll();
     });
   }
@@ -46,7 +45,6 @@ export class RemindersComponent implements OnInit {
       this.getAll();
     });
   }
-
   deleteReminder(reminder: Reminder) {
     this.reminderService.deleteReminder(reminder).subscribe(() => {
       this.getAll();

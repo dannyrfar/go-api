@@ -14,7 +14,7 @@
         <i class="fa fa-check"></i>
       </button>
       <button *ngIf="reminder.complete" class="btn btn-success" disabled>
-        <i class="fa fa-check"></i>
+        <i class="fa fa-times"></i>
       </button>
 
       <button class="btn btn-danger" (click)="deleteReminder(reminder)">
@@ -36,11 +36,11 @@
   <tr *ngFor="let reminder of completedReminders">
     <td>{{reminder.message}}</td>
     <td>
-      <button *ngIf="!reminder.complete" class="btn btn-secondary" (click)="completeReminder(reminder)">
+      <button *ngIf="!reminder.complete" class="btn btn-secondary" disabled>
         <i class="fa fa-check"></i>
       </button>
-      <button *ngIf="reminder.complete" class="btn btn-success" disabled>
-        <i class="fa fa-check"></i>
+      <button *ngIf="reminder.complete" class="btn btn-success" (click)="completeReminder(reminder)">
+        <i class="fa fa-times"></i>
       </button>
       <button class="btn btn-danger" (click)="deleteReminder(reminder)">
         <i class="fa fa-trash"></i>

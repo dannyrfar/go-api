@@ -40,8 +40,7 @@ func AttachMiddleware(r *chi.Mux) {
 	}
 	r.Use(NewStructuredLogger(logger))
 	r.Use(middleware.Recoverer)
-	r.NotFound(handle404)
-	r.MethodNotAllowed(handle404)
+	//r.NotFound(handle404)
 	//r.Use(AuthRequired)
 	r.Use(CORSMiddleware)
 }
@@ -50,8 +49,8 @@ func handle404(w http.ResponseWriter, r *http.Request) {
 	dir, file := path.Split(r.RequestURI)
 	ext := filepath.Ext(file)
 	if file == "" || ext == "" {
-		http.ServeFile(w, r, "./ui/dist/ui/index.html")
+		http.ServeFile(w, r, "./assets/index.html")
 	} else {
-		http.ServeFile(w, r, "./ui/dist/ui/"+path.Join(dir, file))
+		http.ServeFile(w, r, "./assets/"+path.Join(dir, file))
 	}
 }

@@ -2,6 +2,7 @@ node_modules
 ui/node_modules
 README.md
 Dockerfile
+assets
 package-lock.json
 .gitignore
 .dockerignore

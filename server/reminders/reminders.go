@@ -65,7 +65,7 @@ func Complete(id string) error {
 	if err != nil {
 		return err
 	}
-	setReminderCompleteByLocation(location)
+	toggleReminderByLocation(location)
 	return nil
 }
 
@@ -94,9 +94,10 @@ func removeElementByLocation(i int) {
 	mtx.Unlock()
 }
 
-func setReminderCompleteByLocation(location int) {
+func toggleReminderByLocation(location int) {
 	mtx.Lock()
-	list[location].Complete = true
+	value := !list[location].Complete
+	list[location].Complete = value
 	mtx.Unlock()
 }
 

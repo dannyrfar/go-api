@@ -4,8 +4,8 @@
   "description": "npm package",
   "main": "serve.sh",
   "scripts": {
-    "go-compile": "cd ../server && go get && go build -o ../go-server",
-    "node-compile": "cd ui && ng build --output-path ../dist",
+    "go-compile": "cd server && go get && CGO_ENABLED=0 GOOS=linux go build -o ../go-server",
+    "node-compile": "cd ui && ng build --output-path ../assets",
     "compile": "npm run go-compile && npm run node-compile",
     "server": "cd server && gin --port 4201 --path . --build . --i --all -x .",
     "client": "cd ui && ng serve --live-reload false --host 0.0.0.0",

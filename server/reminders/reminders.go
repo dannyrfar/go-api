@@ -1,32 +1,29 @@
 package reminders
 
 import (
-	"errors"
+	"context"
+	"fmt"
+	"log"
+	"os"
 	"sync"
+	"time"
 
-	"github.com/rs/xid"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
+
+	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
 var (
-	list []Reminder
-	mtx  sync.RWMutex
-	once sync.Once
+	mongoClient *mongo.Client
+	mtx         sync.RWMutex
+	once        sync.Once
 )
 
-func init() {
-	once.Do(initialiseList)
-}
-
-// Start the in memory list
-func initialiseList() {
-	list = []Reminder{}
-}
-
-// Reminder data structure for a task with a description of what to do
 type Reminder struct {
-	ID       string `json:"id"`
-	Message  string `json:"message"`
-	Complete bool   `json:"complete"`
+	ID       string `json:"id" bson:"_id"`
+	Message  string `json:"message" bson:"message"`
+	Complete bool   `json:"complete" bson:"complete"`
 }
 
 // ReminderRequest to handle incoming requests
@@ -34,73 +31,119 @@ type ReminderRequest struct {
 	ID string `json:"id"`
 }
 
-// Get retrieves all elements from the Reminder list
+func init() {
+	once.Do(initialiseMongoClient)
+}
+func initialiseMongoClient() {
+	client, err := mongo.NewClient(os.Getenv("MONGODB_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	mongoClient = client
+}
+
 func Get() []Reminder {
-	return list
-}
-
-// Add will add a new Reminder based on a message
-func Add(message string) string {
-	t := newReminder(message)
-	mtx.Lock()
-	list = append(list, t)
-	mtx.Unlock()
-	return t.ID
-}
-
-// Delete will remove a Reminder from the Reminder list
-func Delete(id string) error {
-	location, err := findReminderLocation(id)
+	var results []Reminder
+	collection := mongoClient.Database("app").Collection("reminders")
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	count, _ := collection.Count(ctx, bson.D{{}})
+	if count == 0 {
+		return []Reminder{}
+	}
+	cur, err := collection.Find(ctx, bson.D{{}})
 	if err != nil {
-		return err
+		log.Println(err)
 	}
-	removeElementByLocation(location)
-	return nil
-}
-
-// Complete will set the complete boolean to true, marking a Reminder as
-// completed
-func Complete(id string) error {
-	location, err := findReminderLocation(id)
-	if err != nil {
-		return err
-	}
-	toggleReminderByLocation(location)
-	return nil
-}
-
-func newReminder(msg string) Reminder {
-	return Reminder{
-		ID:       xid.New().String(),
-		Message:  msg,
-		Complete: false,
-	}
-}
-
-func findReminderLocation(id string) (int, error) {
-	mtx.RLock()
-	defer mtx.RUnlock()
-	for i, t := range list {
-		if isMatchingID(t.ID, id) {
-			return i, nil
+	defer cur.Close(ctx)
+	for cur.Next(ctx) {
+		var result bson.M
+		err := cur.Decode(&result)
+		if err != nil {
+			log.Println(err)
 		}
+		results = append(results, Reminder{
+			ID:       string(result["_id"].(primitive.ObjectID).Hex()),
+			Message:  result["message"].(string),
+			Complete: result["complete"].(bool),
+		})
 	}
-	return 0, errors.New("could not find Reminder based on id")
+	if err := cur.Err(); err != nil {
+		log.Println(err)
+	}
+	return results
 }
 
-func removeElementByLocation(i int) {
+func Add(message string) string {
+	var id primitive.ObjectID
+	if message == "" {
+		return ""
+	}
 	mtx.Lock()
-	list = append(list[:i], list[i+1:]...)
+	if !reminderExists(message) {
+		coll := mongoClient.Database("app").Collection("reminders")
+		res, err := coll.InsertOne(
+			context.Background(),
+			bson.D{{"message", message}, {"complete", false}},
+		)
+		if err != nil {
+			log.Println(err)
+		}
+		id = res.InsertedID.(primitive.ObjectID)
+	}
 	mtx.Unlock()
+	return string(id.Hex())
 }
-
-func toggleReminderByLocation(location int) {
-	mtx.Lock()
-	value := !list[location].Complete
-	list[location].Complete = value
-	mtx.Unlock()
+func Delete(id string) error {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	objectId, _ := primitive.ObjectIDFromHex(id)
+	_ = mongoClient.Database("app").Collection("reminders").FindOneAndDelete(ctx, bson.D{{"_id", objectId}})
+	return nil
 }
-
-func isMatchingID(a string, b string) bool {
-	return a == b
+func Complete(id string) error {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	var result bson.M
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	err = mongoClient.Database("app").Collection("reminders").FindOne(ctx, bson.D{{"_id", objectId}}).Decode(&result)
+	if err != nil {
+		return err
+	}
+	toggleState(result["message"].(string), !result["complete"].(bool))
+	return nil
+}
+func reminderExists(message string) bool {
+	var result bson.M
+	exists := false
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	err := mongoClient.Database("app").Collection("reminders").FindOne(ctx, bson.D{{"message", message}}).Decode(&result)
+	if err != nil {
+		log.Println(err)
+	}
+	if result["message"] == message {
+		exists = true
+	}
+	return exists
+}
+func toggleState(message string, complete bool) {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	_, err := mongoClient.Database("app").Collection("reminders").UpdateOne(ctx, bson.D{{"message", message}}, bson.D{
+		{"$set", bson.D{
+			{"complete", complete},
+		}},
+		{"$currentDate", bson.D{
+			{"lastModified", true},
+		}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+}
+func main() {
+	Complete("5c3171afafd021bf81e1a99f")
+	results := Get()
+	fmt.Println(results)
 }
